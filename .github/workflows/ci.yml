@@ -2,9 +2,14 @@ name: CI Pipeline - Gestion Achats Fournisseurs
 
 on:
   push:
-    branches: [main, dev]
+    branches:
+      - main
+      - dev
+      - feat/ci-pipeline
   pull_request:
-    branches: [main]
+    branches:
+      - main
+      - dev
 
 jobs:
   backend-ci:
@@ -33,18 +38,13 @@ jobs:
         run: cd backend && mvn test || true
 
       - name: Analyse SonarCloud
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          cd backend
-          mvn sonar:sonar -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+        run: cd backend && mvn sonar:sonar -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
       - name: Scan OWASP
         run: cd backend && mvn org.owasp:dependency-check-maven:check -DfailBuildOnCVSS=9 || true
 
       - name: Build Docker backend
-        run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-backend:latest ./backend
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-backend:latest ./backend
 
       - name: Scan Trivy backend
         uses: aquasecurity/trivy-action@master
@@ -81,8 +81,7 @@ jobs:
         run: cd frontend && npm run build -- --configuration production
 
       - name: Build Docker frontend
-        run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-frontend:latest ./frontend
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-frontend:latest ./frontend
 
       - name: Scan Trivy frontend
         uses: aquasecurity/trivy-action@master
