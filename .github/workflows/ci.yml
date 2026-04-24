@@ -8,7 +8,7 @@ on:
 
 jobs:
 
-   backend-ci:
+  backend-ci:
     name: Backend - Build Test Sonar Docker
     runs-on: ubuntu-latest
     steps:
@@ -34,7 +34,7 @@ jobs:
       - name: Tests unitaires
         run: cd backend && mvn test || true
 
-      - name: Analyse qualite SonarCloud
+      - name: Analyse SonarCloud
         run: |
           cd backend
           mvn sonar:sonar \
@@ -49,10 +49,9 @@ jobs:
       - name: Build image Docker backend
         run: |
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-backend:${{ github.sha }} ./backend
-          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-backend:${{ github.sha }} \
-                     ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-backend:latest
+          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-backend:${{ github.sha }} ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-backend:latest
 
-      - name: Scan securite Trivy backend
+      - name: Scan Trivy backend
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-backend:latest
@@ -66,7 +65,6 @@ jobs:
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-backend:${{ github.sha }}
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-backend:latest
 
-  
   frontend-ci:
     name: Frontend - Build Lint Docker
     runs-on: ubuntu-latest
@@ -83,19 +81,18 @@ jobs:
       - name: Installation dependances npm
         run: cd frontend && npm install
 
-      - name: Lint ESLint Angular
+      - name: Lint ESLint
         run: cd frontend && npm run lint || true
 
-      - name: Build production Angular
+      - name: Build production
         run: cd frontend && npm run build -- --configuration production
 
       - name: Build image Docker frontend
         run: |
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-frontend:${{ github.sha }} ./frontend
-          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-frontend:${{ github.sha }} \
-                     ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-frontend:latest
+          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-frontend:${{ github.sha }} ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-frontend:latest
 
-      - name: Scan securite Trivy frontend
+      - name: Scan Trivy frontend
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-frontend:latest
