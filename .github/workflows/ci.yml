@@ -67,9 +67,6 @@ jobs:
   frontend-ci:
     name: Frontend - Build Lint Docker
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -80,16 +77,15 @@ jobs:
           node-version: '20'
 
       - name: Installation dependances npm
-        run: npm install
+        run: cd frontend && npm install
 
       - name: Lint ESLint
-        run: npm run lint || true
+        run: cd frontend && npm run lint || true
 
       - name: Build production
-        run: npm run build -- --configuration production
+        run: cd frontend && npm run build -- --configuration production
 
       - name: Build Docker frontend
-        working-directory: .
         run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-frontend:latest ./frontend
 
       - name: Scan Trivy frontend
@@ -101,7 +97,6 @@ jobs:
           severity: CRITICAL
 
       - name: Push DockerHub frontend
-        working-directory: .
         run: |
           echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-frontend:latest
