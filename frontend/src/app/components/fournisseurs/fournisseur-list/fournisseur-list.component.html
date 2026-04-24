@@ -1,0 +1,89 @@
+<div class="page-shell">
+  <section class="page-hero mb-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-end gap-3 position-relative" style="z-index: 1;">
+      <div>
+        <span class="page-hero__eyebrow"><i class="bi bi-people-fill"></i> Catalogue fournisseurs</span>
+        <h1>Gestion de vos partenaires</h1>
+        <p>Consultez, comparez et administrez vos fournisseurs.</p>
+      </div>
+      <a routerLink="/fournisseurs/nouveau" class="btn btn-light btn-lg text-primary shadow-sm">
+        <i class="bi bi-plus-lg me-2"></i>Nouveau fournisseur
+      </a>
+    </div>
+  </section>
+
+  <div *ngIf="message" class="alert mb-4" [class.alert-success]="!isError" [class.alert-danger]="isError">
+    {{ message }}
+  </div>
+
+  <section class="section-card mb-4">
+    <div class="section-card__header">
+      <div>
+        <h3>Recherche rapide</h3>
+        <div class="field-hint">Filtrez les fournisseurs par nom.</div>
+      </div>
+    </div>
+    <div class="section-card__body">
+      <div class="input-group input-group-lg">
+        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+        <input type="text" class="form-control" placeholder="Rechercher par nom..."
+               [(ngModel)]="searchNom" (keyup.enter)="search()">
+        <button class="btn btn-primary" (click)="search()">Rechercher</button>
+        <button class="btn btn-outline-secondary" (click)="searchNom=''; loadAll()">
+          Réinitialiser
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-card">
+    <div class="table-responsive">
+      <table class="table table-modern table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Contact</th>
+            <th>Qualité service</th>
+            <th>Note</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let f of fournisseurs">
+            <td>
+              <div class="fw-bold text-dark">{{ f.nom }}</div>
+              <div class="field-hint">Fiche fournisseur</div>
+            </td>
+            <td>{{ f.contact }}</td>
+            <td><span class="badge bg-secondary">{{ f.qualiteService }}/5</span></td>
+            <td>
+              <span class="text-warning fw-semibold">{{ getStars(f.note) }}</span>
+              <small class="text-muted ms-1">({{ f.note }}/10)</small>
+            </td>
+            <td class="text-end">
+              <div class="action-stack justify-content-end">
+                <a [routerLink]="['/fournisseurs', f.id, 'detail']" class="btn btn-sm btn-outline-info">
+                  <i class="bi bi-eye"></i>
+                </a>
+                <a [routerLink]="['/fournisseurs', f.id, 'edit']" class="btn btn-sm btn-outline-warning">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <button class="btn btn-sm btn-outline-danger" (click)="delete(f.id!)">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="fournisseurs.length === 0">
+            <td colspan="5">
+              <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                Aucun fournisseur trouvé
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

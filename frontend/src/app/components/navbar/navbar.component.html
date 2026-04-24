@@ -1,0 +1,33 @@
+<nav class="navbar navbar-expand-lg site-navbar navbar-dark mb-4">
+  <div class="container page-shell py-2">
+    <a class="navbar-brand" routerLink="/">
+      <span class="brand-mark"><i class="bi bi-bag-check-fill"></i></span>
+      <span class="brand-copy">
+        <span>Gestion Achats</span>
+        <small>Suivi fournisseurs et commandes</small>
+      </span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-expanded="false" aria-label="Basculer la navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto gap-lg-1 mt-3 mt-lg-0">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/fournisseurs" routerLinkActive="active">
+            <i class="bi bi-people me-2"></i>Fournisseurs
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/commandes" routerLinkActive="active">
+            <i class="bi bi-cart-check me-2"></i>Commandes
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/evaluation" routerLinkActive="active">
+            <i class="bi bi-stars me-2"></i>Évaluation
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>

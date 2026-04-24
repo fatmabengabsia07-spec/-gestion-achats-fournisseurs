@@ -1,0 +1,93 @@
+<div class="page-shell">
+  <section class="page-hero mb-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-end gap-3 position-relative" style="z-index: 1;">
+      <div>
+        <span class="page-hero__eyebrow"><i class="bi bi-cart-check"></i> Commandes</span>
+        <h1>Suivi des achats en cours</h1>
+        <p>Gardez un regard précis sur les montants, statuts et actions sur chaque commande.</p>
+      </div>
+      <a routerLink="/commandes/nouvelle" class="btn btn-light btn-lg text-primary shadow-sm">
+        <i class="bi bi-plus-lg me-2"></i>Nouvelle commande
+      </a>
+    </div>
+  </section>
+
+  <div *ngIf="message" class="alert mb-4" [class.alert-success]="!isError" [class.alert-danger]="isError">
+    {{ message }}
+  </div>
+
+  <section class="section-card mb-4">
+    <div class="section-card__header">
+      <h3><i class="bi bi-funnel me-2 text-primary"></i>Filtre de statut</h3>
+    </div>
+    <div class="section-card__body">
+      <div class="row g-3 align-items-center">
+        <div class="col-md-auto">
+          <label class="form-label fw-semibold mb-0">Afficher</label>
+        </div>
+        <div class="col-md-4 col-lg-3">
+          <select class="form-select" [(ngModel)]="filtreStatut" (ngModelChange)="filtrer()">
+            <option value="Tous">Tous</option>
+            <option value="EN_ATTENTE">EN_ATTENTE</option>
+            <option value="EN_COURS">EN_COURS</option>
+            <option value="LIVREE">LIVREE</option>
+            <option value="ANNULEE">ANNULEE</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-card">
+    <div class="table-responsive">
+      <table class="table table-modern table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Fournisseur</th>
+            <th>Date</th>
+            <th>Montant</th>
+            <th>Statut</th>
+            <th>Changer statut</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of commandes">
+            <td class="text-muted">{{ c.id }}</td>
+            <td class="fw-semibold">{{ getNomFournisseur(c.fournisseurId) }}</td>
+            <td>{{ c.date }}</td>
+            <td class="fw-semibold">{{ c.montant | number:'1.2-2' }} DT</td>
+            <td><span [class]="getStatutClass(c.statut)">{{ c.statut }}</span></td>
+            <td>
+              <select class="form-select form-select-sm" style="width: 145px" [value]="c.statut" (change)="updateStatut(c.id!, $any($event.target).value)">
+                <option>EN_ATTENTE</option>
+                <option>EN_COURS</option>
+                <option>LIVREE</option>
+                <option>ANNULEE</option>
+              </select>
+            </td>
+            <td class="text-end">
+              <div class="action-stack justify-content-end">
+                <a [routerLink]="['/commandes', c.id, 'edit']" class="btn btn-sm btn-outline-warning">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <button class="btn btn-sm btn-outline-danger" (click)="delete(c.id!)">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="commandes.length === 0">
+            <td colspan="7">
+              <div class="empty-state">
+                <i class="bi bi-clipboard-x"></i>
+                Aucune commande
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
