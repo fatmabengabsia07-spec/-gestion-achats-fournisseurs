@@ -1,0 +1,61 @@
+<div class="page-shell">
+  <section class="page-hero mb-4">
+    <span class="page-hero__eyebrow"><i class="bi bi-bar-chart-fill"></i> Comparatif</span>
+    <h1>Évaluation & comparaison des fournisseurs</h1>
+    <p>Une lecture des performances avec des cartes, des scores et des accès au détail.</p>
+  </section>
+
+  <div class="row g-4">
+    <div *ngFor="let e of evaluations; let i = index" class="col-md-6 col-xl-4">
+      <div class="section-card h-100">
+        <div class="section-card__header">
+          <div>
+            <h3 class="mb-1"><span class="text-muted me-1">#{{ i + 1 }}</span>{{ e.nomFournisseur }}</h3>
+            <div class="field-hint">Performance globale fournisseur</div>
+          </div>
+          <span [class]="getAppreciationClass(e.appreciation)">{{ e.appreciation }}</span>
+        </div>
+        <div class="section-card__body">
+          <div class="mb-4">
+            <div class="d-flex justify-content-between mb-2">
+              <small class="text-muted">Score global</small>
+              <small class="fw-bold">{{ e.noteGlobale }}%</small>
+            </div>
+            <div class="progress" style="height: 12px;">
+              <div class="progress-bar" [style.width.%]="e.noteGlobale" [style.background-color]="getBarColor(e.noteGlobale)"></div>
+            </div>
+          </div>
+
+          <div class="metric-grid">
+            <div class="metric-card text-center">
+              <div class="metric-value text-info">{{ e.avgDelaiLivraison | number:'1.1-1' }}j</div>
+              <div class="metric-label">Délai moyen</div>
+            </div>
+            <div class="metric-card text-center">
+              <div class="metric-value text-success">{{ e.nombreCommandes }}</div>
+              <div class="metric-label">Commandes</div>
+            </div>
+            <div class="metric-card text-center">
+              <div class="metric-value text-warning">{{ e.totalAchats | number:'1.0-0' }}</div>
+              <div class="metric-label">Total DT</div>
+            </div>
+          </div>
+        </div>
+        <div class="section-card__body pt-0">
+          <a [routerLink]="['/fournisseurs', e.fournisseurId, 'detail']" class="btn btn-outline-primary w-100">
+            <i class="bi bi-eye me-1"></i>Voir détail
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="evaluations.length === 0" class="col-12">
+      <div class="section-card">
+        <div class="empty-state">
+          <i class="bi bi-bar-chart"></i>
+          Aucune donnée disponible
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

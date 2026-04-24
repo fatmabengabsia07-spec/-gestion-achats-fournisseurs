@@ -1,0 +1,69 @@
+<div class="page-shell">
+  <section class="page-hero mb-4">
+    <span class="page-hero__eyebrow"><i class="bi bi-person-badge"></i> Fournisseurs</span>
+    <h1>{{ isEditMode ? 'Modifier le fournisseur' : 'Créer un nouveau fournisseur' }}</h1>
+    <p>Des formulaires pour saisir les informations du fournisseur .</p>
+  </section>
+
+  <div class="row justify-content-center">
+    <div class="col-12 col-xl-8">
+      <div *ngIf="isLoading && isEditMode" class="empty-state">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-3 mb-0">Chargement des données...</p>
+      </div>
+
+      <div *ngIf="!isLoading || !isEditMode" class="form-shell">
+        <div class="section-card__header">
+          <div>
+            <h3>{{ isEditMode ? 'Modifier' : 'Nouveau' }} fournisseur</h3>
+            <div class="field-hint">Renseignez les informations principales du partenaire.</div>
+          </div>
+          <span class="badge bg-light text-dark">{{ fournisseur.qualiteService }}/5</span>
+        </div>
+        <div class="section-card__body">
+          <div *ngIf="message" class="alert alert-danger">{{ message }}</div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Nom <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" [(ngModel)]="fournisseur.nom"
+                     [class.is-invalid]="errors.nom" placeholder="Ex: Alpha Services">
+              <div class="invalid-feedback">{{ errors.nom }}</div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Email contact <span class="text-danger">*</span></label>
+              <input type="email" class="form-control" [(ngModel)]="fournisseur.contact"
+                     [class.is-invalid]="errors.contact" placeholder="contact@entreprise.com">
+              <div class="invalid-feedback">{{ errors.contact }}</div>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label fw-semibold">Qualité de service : {{ fournisseur.qualiteService }}/5</label>
+              <input type="range" class="form-range" min="1" max="5" [(ngModel)]="fournisseur.qualiteService">
+              <div class="d-flex justify-content-between text-muted small">
+                <span>Moyenne</span><span>Excellente</span>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label fw-semibold">Note : {{ fournisseur.note }}/10</label>
+              <input type="range" class="form-range" min="0" max="10" step="0.5" [(ngModel)]="fournisseur.note">
+              <div class="field-hint mt-2">Cette note alimente la vue d’évaluation.</div>
+            </div>
+          </div>
+
+          <div class="hero-actions mt-4">
+            <button class="btn btn-primary" (click)="save()">
+              <i class="bi bi-check-lg me-1"></i>
+              {{ isEditMode ? 'Modifier' : 'Créer' }}
+            </button>
+            <button class="btn btn-outline-secondary" (click)="cancel()">
+              <i class="bi bi-x-lg me-1"></i>Annuler
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

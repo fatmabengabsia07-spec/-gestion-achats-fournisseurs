@@ -1,0 +1,205 @@
+<div class="page-shell py-3">
+  <div *ngIf="isLoading" class="empty-state">
+    <div class="spinner-border text-primary" role="status"></div>
+    <p class="mt-3 mb-0">Chargement en cours...</p>
+  </div>
+
+  <div *ngIf="!isLoading">
+    <section class="page-hero mb-4">
+      <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-end gap-3 position-relative" style="z-index: 1;">
+        <div>
+          <span class="page-hero__eyebrow"><i class="bi bi-person-badge"></i> Fiche fournisseur</span>
+          <h1>{{ fournisseur?.nom }}</h1>
+          <p>{{ fournisseur?.contact }}</p>
+        </div>
+        <div class="hero-actions">
+          <a [routerLink]="['/fournisseurs', id, 'edit']" class="btn btn-light btn-lg text-primary shadow-sm">
+            <i class="bi bi-pencil me-2"></i>Modifier
+          </a>
+          <a routerLink="/fournisseurs" class="btn btn-outline-light btn-lg">
+            <i class="bi bi-arrow-left me-2"></i>Retour
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <div *ngIf="message" class="alert mb-4" [class.alert-success]="!isError" [class.alert-danger]="isError">
+      {{ message }}
+    </div>
+
+    <div class="row g-4 mb-4">
+      <div class="col-lg-5">
+        <div class="section-card h-100">
+          <div class="section-card__header">
+            <h3><i class="bi bi-info-circle me-2 text-primary"></i>Informations</h3>
+          </div>
+          <div class="section-card__body">
+            <div class="soft-panel p-3">
+              <p class="mb-3"><strong>Email :</strong> {{ fournisseur?.contact }}</p>
+              <p class="mb-3"><strong>Qualité service :</strong> <span class="badge bg-secondary ms-1">{{ fournisseur?.qualiteService }}/5</span></p>
+              <p class="mb-0"><strong>Note :</strong> <span class="text-warning ms-1 fw-semibold">{{ fournisseur?.note }}/10</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-7">
+        <div class="section-card h-100">
+          <div class="section-card__header">
+            <h3><i class="bi bi-bar-chart-line me-2 text-primary"></i>Évaluation globale</h3>
+            <span *ngIf="evaluation" [class]="getAppreciationClass(evaluation.appreciation)">{{ evaluation.appreciation }}</span>
+          </div>
+          <div class="section-card__body">
+            <div *ngIf="evaluation; else noEval">
+              <div class="mb-4">
+                <div class="d-flex justify-content-between mb-2">
+                  <small class="text-muted">Score global</small>
+                  <small class="fw-bold">{{ evaluation.noteGlobale }}%</small>
+                </div>
+                <div class="progress" style="height: 12px;">
+                  <div class="progress-bar bg-primary" [style.width.%]="evaluation.noteGlobale"></div>
+                </div>
+              </div>
+              <div class="metric-grid">
+                <div class="metric-card text-center">
+                  <div class="metric-value text-info">{{ evaluation.avgDelaiLivraison | number:'1.1-1' }}j</div>
+                  <div class="metric-label">Délai moyen</div>
+                </div>
+                <div class="metric-card text-center">
+                  <div class="metric-value text-success">{{ evaluation.nombreCommandes }}</div>
+                  <div class="metric-label">Commandes</div>
+                </div>
+                <div class="metric-card text-center">
+                  <div class="metric-value text-warning">{{ evaluation.totalAchats | number:'1.0-0' }}</div>
+                  <div class="metric-label">Total DT</div>
+                </div>
+                <div class="metric-card text-center">
+                  <div class="metric-value text-primary">{{ fournisseur?.qualiteService }}/5</div>
+                  <div class="metric-label">Qualité</div>
+                </div>
+              </div>
+            </div>
+
+            <ng-template #noEval>
+              <div class="empty-state py-4">
+                <i class="bi bi-bar-chart"></i>
+                Pas encore d'évaluation disponible
+              </div>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="section-card mb-4">
+      <div class="section-card__header">
+        <h3><i class="bi bi-cart me-2 text-primary"></i>Commandes ({{ commandes.length }})</h3>
+        <a routerLink="/commandes/nouvelle" class="btn btn-primary btn-sm">
+          <i class="bi bi-plus-lg me-1"></i>Nouvelle commande
+        </a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-modern table-hover mb-0 align-middle">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Date</th>
+              <th>Montant</th>
+              <th>Statut</th>
+              <th>Changer statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of commandes">
+              <td class="text-muted">{{ c.id }}</td>
+              <td>{{ c.date }}</td>
+              <td class="fw-semibold">{{ c.montant | number:'1.2-2' }} DT</td>
+              <td><span [class]="getStatutClass(c.statut)">{{ c.statut }}</span></td>
+              <td>
+                <select class="form-select form-select-sm" style="width: 150px" [value]="c.statut" (change)="updateStatut(c.id!, $any($event.target).value)">
+                  <option>EN_ATTENTE</option>
+                  <option>EN_COURS</option>
+                  <option>LIVREE</option>
+                  <option>ANNULEE</option>
+                </select>
+              </td>
+            </tr>
+            <tr *ngIf="commandes.length === 0">
+              <td colspan="5">
+                <div class="empty-state">
+                  <i class="bi bi-cart-x"></i>
+                  Aucune commande pour ce fournisseur
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section-card">
+      <div class="section-card__header">
+        <h3><i class="bi bi-clock-history me-2 text-primary"></i>Historique achats ({{ historiques.length }})</h3>
+        <button class="btn btn-outline-primary btn-sm" (click)="showHistoriqueForm = !showHistoriqueForm">
+          <i class="bi bi-plus-lg me-1"></i>Ajouter
+        </button>
+      </div>
+      <div class="section-card__body">
+        <div *ngIf="showHistoriqueForm" class="soft-panel p-3 mb-4">
+          <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold">Produit</label>
+              <input type="text" class="form-control form-control-sm" placeholder="Nom du produit" [(ngModel)]="newHistorique.produit">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small fw-semibold">Quantité</label>
+              <input type="number" class="form-control form-control-sm" [(ngModel)]="newHistorique.quantite" min="1">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small fw-semibold">Délai (jours)</label>
+              <input type="number" class="form-control form-control-sm" [(ngModel)]="newHistorique.delaiLivraison" min="0">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small fw-semibold">Date achat</label>
+              <input type="date" class="form-control form-control-sm" [(ngModel)]="newHistorique.dateAchat">
+            </div>
+            <div class="col-md-3">
+              <button class="btn btn-success btn-sm w-100" (click)="addHistorique()">
+                <i class="bi bi-check-lg me-1"></i>Sauver
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-modern table-sm mb-0 align-middle">
+            <thead>
+              <tr>
+                <th>Produit</th>
+                <th>Quantité</th>
+                <th>Délai livraison</th>
+                <th>Date achat</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let h of historiques">
+                <td class="fw-semibold">{{ h.produit }}</td>
+                <td>{{ h.quantite }}</td>
+                <td>{{ h.delaiLivraison }} jours</td>
+                <td>{{ h.dateAchat ? (h.dateAchat | date:'dd/MM/yyyy') : '—' }}</td>
+              </tr>
+              <tr *ngIf="historiques.length === 0">
+                <td colspan="4">
+                  <div class="empty-state py-4">
+                    <i class="bi bi-journal-text"></i>
+                    Aucun historique d'achat
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
