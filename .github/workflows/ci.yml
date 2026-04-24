@@ -15,6 +15,9 @@ jobs:
   backend-ci:
     name: Backend - Build Test Sonar Docker
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -29,21 +32,22 @@ jobs:
           cache: maven
 
       - name: Installation dependances Maven
-        run: cd backend && mvn dependency:resolve
+        run: mvn dependency:resolve
 
       - name: Build Maven
-        run: cd backend && mvn clean package -DskipTests
+        run: mvn clean package -DskipTests
 
       - name: Tests unitaires
-        run: cd backend && mvn test || true
+        run: mvn test || true
 
       - name: Analyse SonarCloud
-        run: cd backend && mvn sonar:sonar -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+        run: mvn sonar:sonar -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
       - name: Scan OWASP
-        run: cd backend && mvn org.owasp:dependency-check-maven:check -DfailBuildOnCVSS=9 || true
+        run: mvn org.owasp:dependency-check-maven:check -DfailBuildOnCVSS=9 || true
 
       - name: Build Docker backend
+        working-directory: .
         run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-backend:latest ./backend
 
       - name: Scan Trivy backend
@@ -55,6 +59,7 @@ jobs:
           severity: CRITICAL
 
       - name: Push DockerHub backend
+        working-directory: .
         run: |
           echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-backend:latest
@@ -62,25 +67,29 @@ jobs:
   frontend-ci:
     name: Frontend - Build Lint Docker
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 18
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Installation dependances npm
-        run: cd frontend && npm install
+        run: npm install
 
       - name: Lint ESLint
-        run: cd frontend && npm run lint || true
+        run: npm run lint || true
 
       - name: Build production
-        run: cd frontend && npm run build -- --configuration production
+        run: npm run build -- --configuration production
 
       - name: Build Docker frontend
+        working-directory: .
         run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-frontend:latest ./frontend
 
       - name: Scan Trivy frontend
@@ -92,6 +101,7 @@ jobs:
           severity: CRITICAL
 
       - name: Push DockerHub frontend
+        working-directory: .
         run: |
           echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-frontend:latest
