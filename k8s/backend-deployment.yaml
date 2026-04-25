@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: purchasing-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: purchasing-backend
+  template:
+    metadata:
+      labels:
+        app: purchasing-backend
+    spec:
+      containers:
+      - name: backend
+        image: fatma240/purchasing-backend:latest
+        ports:
+        - containerPort: 9090
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: docker
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+spec:
+  selector:
+    app: purchasing-backend
+  ports:
+  - port: 9090
+    targetPort: 9090
+  type: ClusterIP
