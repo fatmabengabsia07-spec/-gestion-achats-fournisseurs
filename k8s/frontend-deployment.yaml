@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: purchasing-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: purchasing-frontend
+  template:
+    metadata:
+      labels:
+        app: purchasing-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: fatma240/purchasing-frontend:latest
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: purchasing-frontend-svc
+spec:
+  selector:
+    app: purchasing-frontend
+  ports:
+  - port: 80
+    targetPort: 80
+  type: NodePort
+
