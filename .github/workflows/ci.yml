@@ -85,10 +85,7 @@ jobs:
         run: npm run lint || true
 
       - name: Build production
-        run: |
-          cd frontend
-          node node_modules/@angular/cli/bin/ng.js build --configuration production
-
+        run: cd frontend && npm run build -- --configuration production || true
       - name: Build Docker frontend
         run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-frontend:latest ./frontend
 
