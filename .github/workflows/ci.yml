@@ -2,17 +2,19 @@ name: CI Pipeline - Gestion Achats Fournisseurs
 
 on:
   push:
-    branches: [main, dev]
+    branches:
+      - main
+      - dev
   pull_request:
-    branches: [main]
+    branches:
+      - main
+      - dev
 
 jobs:
-
-   backend-ci:
+  backend-ci:
     name: Backend - Build Test Sonar Docker
     runs-on: ubuntu-latest
     steps:
-
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -26,33 +28,29 @@ jobs:
           cache: maven
 
       - name: Installation dependances Maven
-        run: cd backend && mvn dependency:resolve
+        working-directory: backend
+        run: mvn dependency:resolve
 
       - name: Build Maven
-        run: cd backend && mvn clean package -DskipTests
+        working-directory: backend
+        run: mvn clean package -DskipTests
 
       - name: Tests unitaires
-        run: cd backend && mvn test || true
+        working-directory: backend
+        run: mvn test || true
 
-      - name: Analyse qualite SonarCloud
-        run: |
-          cd backend
-          mvn sonar:sonar \
-            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
-            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} \
-            -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+      - name: Analyse SonarCloud
+        working-directory: backend
+        run: mvn sonar:sonar -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
-      - name: Scan dependances OWASP
-        run: cd backend && mvn org.owasp:dependency-check-maven:check -DfailBuildOnCVSS=9 || true
+      - name: Scan OWASP
+        working-directory: backend
+        run: mvn org.owasp:dependency-check-maven:check -DfailBuildOnCVSS=9 || true
 
-      - name: Build image Docker backend
-        run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-backend:${{ github.sha }} ./backend
-          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-backend:${{ github.sha }} \
-                     ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-backend:latest
+      - name: Build Docker backend
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-backend:latest ./backend
 
-      - name: Scan securite Trivy backend
+      - name: Scan Trivy backend
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-backend:latest
@@ -63,39 +61,36 @@ jobs:
       - name: Push DockerHub backend
         run: |
           echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-backend:${{ github.sha }}
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-backend:latest
 
-  
   frontend-ci:
     name: Frontend - Build Lint Docker
     runs-on: ubuntu-latest
     steps:
-
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 18
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
 
       - name: Installation dependances npm
-        run: cd frontend && npm install
+        working-directory: frontend
+        run: npm install
 
-      - name: Lint ESLint Angular
-        run: cd frontend && npm run lint || true
+      - name: Lint ESLint
+        working-directory: frontend
+        run: npm run lint || true
 
-      - name: Build production Angular
-        run: cd frontend && npm run build -- --configuration production
+      - name: Build production
+        working-directory: frontend
+        run: npm run build -- --configuration production
 
-      - name: Build image Docker frontend
-        run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-frontend:${{ github.sha }} ./frontend
-          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-frontend:${{ github.sha }} \
-                     ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-frontend:latest
+      - name: Build Docker frontend
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-frontend:latest ./frontend
 
-      - name: Scan securite Trivy frontend
+      - name: Scan Trivy frontend
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-frontend:latest
@@ -106,6 +101,4 @@ jobs:
       - name: Push DockerHub frontend
         run: |
           echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-frontend:${{ github.sha }}
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-frontend:latest
-
