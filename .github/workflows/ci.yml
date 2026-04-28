@@ -1,0 +1,111 @@
+name: CI Pipeline - Gestion Achats Fournisseurs
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  backend-ci:
+    name: Backend - Build Test Sonar Docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Installation dependances Maven
+        working-directory: backend
+        run: mvn dependency:resolve
+
+      - name: Build Maven
+        working-directory: backend
+        run: mvn clean package -DskipTests
+
+      - name: Tests unitaires
+        working-directory: backend
+        run: mvn test || true
+
+      - name: Analyse SonarCloud
+        working-directory: backend
+        run: mvn sonar:sonar -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+
+      - name: Cache OWASP Dependency Check
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository/org/owasp/dependency-check-data
+          key: owasp-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            owasp-${{ runner.os }}-
+
+      - name: OWASP Dependency Check
+        run: mvn org.owasp:dependency-check-maven:check -DfailBuildOnCVSS=11 || true
+
+      - name: Build Docker backend
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-backend:latest ./backend
+
+      - name: Scan Trivy backend
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-backend:latest
+          format: table
+          exit-code: '1'
+          severity: CRITICAL
+
+      - name: Push DockerHub backend
+        run: |
+          echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-backend:latest
+
+  frontend-ci:
+    name: Frontend - Build Lint Docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Installation dependances npm
+        working-directory: frontend
+        run: npm install
+
+      - name: Lint ESLint
+        working-directory: frontend
+        run: npm run lint || true
+
+      - name: Build production
+        working-directory: frontend
+        run: npm run build -- --configuration production
+
+      - name: Build Docker frontend
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-frontend:latest ./frontend
+
+      - name: Scan Trivy frontend
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-frontend:latest
+          format: table
+          exit-code: '1'
+          severity: CRITICAL
+
+      - name: Push DockerHub frontend
+        run: |
+          echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-frontend:latest

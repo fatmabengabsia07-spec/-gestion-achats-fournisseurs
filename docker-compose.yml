@@ -1,0 +1,48 @@
+
+version: '3.8'
+
+services:
+
+  # ── Base de données MySQL ──────────────────────
+  db:
+    image: mysql:8.0
+    container_name: purchasing-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: purchasing_db
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysqldata:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Backend Spring Boot ────────────────────────
+  backend:
+    build: ./backend
+    container_name: purchasing-backend
+    restart: always
+    ports:
+      - "9090:9090"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ── Frontend Angular ───────────────────────────
+  frontend:
+    build: ./frontend
+    container_name: purchasing-frontend
+    restart: always
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysqldata:
