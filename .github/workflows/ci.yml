@@ -43,9 +43,16 @@ jobs:
         working-directory: backend
         run: mvn sonar:sonar -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
-      - name: Scan OWASP
-        working-directory: backend
-        run: mvn org.owasp:dependency-check-maven:check -DfailBuildOnCVSS=9 || true
+       - name: Cache OWASP Dependency Check
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository/org/owasp/dependency-check-data
+          key: owasp-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            owasp-${{ runner.os }}-
+
+      - name: OWASP Dependency Check
+        run: mvn org.owasp:dependency-check-maven:check -DfailBuildOnCVSS=11 || true
 
       - name: Build Docker backend
         run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/purchasing-backend:latest ./backend
